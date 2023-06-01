@@ -1,16 +1,21 @@
 <template>
   <div class="button-list">
-    <div v-for="item in state.buttonList"  :key="item.id">
-      <span>{{ item.name }}</span>
-      <el-button link type="primary" @click="addContent(item)"> 引用</el-button>
-    </div>
+    <el-table :data="state.buttonList" border>
+      <el-table-column label="文案" prop="name" align="center"></el-table-column>
+      <el-table-column label="操作" align="center">
+        <template #default="scope">
+          <el-button link type="primary" @click="addContent(scope.row)">引用</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
     <div style="margin: 10px 0;">
       <el-button v-for="item in state.operatorList" :key="item.id" @click="addContent(item)">
         {{ item.name }}
       </el-button>
     </div>
   </div>
-  <div contenteditable ref="textarea" class="textarea"></div>
+  <div contenteditable ref="textarea" class="textarea" @blur="storeSelection(textarea)"></div>
   <el-button type="primary" @click="save">保存</el-button>
   <div>
     保存的内容：{{ state.content }}
@@ -71,16 +76,24 @@ const state = ref({
       name: ')',
     },
   ],
-  content: ''
+  content: '',
+  tableData: [{}],
 })
 const textarea = ref(null);
 
 const addContent = (item) => {
   const text = item.type === 1 ? `{${item.name}}` : item.name;
-  insertAtCursorInEditor(textarea.value, text);
+  const isEditable = item.type !== 1;
+  insertAtCursorInEditor(textarea.value, text, isEditable);
 }
 const save = () => {
   state.value.content = textarea.value.textContent;
+}
+const storeSelection = (dom) => {
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0) {
+    textarea.value.savedRange = sel.getRangeAt(0);
+  }
 }
 </script>
 
